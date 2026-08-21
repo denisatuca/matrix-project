@@ -1,0 +1,13 @@
+CMakeFiles/
+cmake-build-debug/
+CMakeCache.txt
+Makefile
+cmake_install.cmake
+*.o
+*.debug
+env/
+venv/
+__pycache__/
+
+matrix
+*.exe
