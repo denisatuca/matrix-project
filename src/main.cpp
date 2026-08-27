@@ -3,6 +3,7 @@
 //
 #include <iostream>
 #include <chrono>
+#include <omp.h>
 #include "../include/Matrix.h"
 
 int main() {
@@ -26,8 +27,10 @@ int main() {
     std::cout << "\nResult Matrix C (2x2):\n";
     C.print();
 
-    std::cout << "\n--- Running Baseline Benchmark (512x512) ---\n";
-    int N = 512;
+
+
+   
+    int N = 1024;
     Matrix BigA(N, N);
     Matrix BigB(N, N);
 
@@ -36,32 +39,50 @@ int main() {
         BigB.data[i] = 2.0f;
     }
 
-    auto start = std::chrono::high_resolution_clock::now();
-    Matrix BigC = Matrix::multiply_naive(BigA, BigB);
-    auto end = std::chrono::high_resolution_clock::now();
 
-    std::chrono::duration<double, std::milli> duration = end - start;
-    std::cout << "512x512 Naive Execution Time: " << duration.count() << " ms\n";
-//551.458 ms
-
-
+ ;
     try{
-        Matrix PyTorchWeights = Matrix::load_from_bin("weights.bin");
+        Matrix PyTorchWeights = Matrix::load_from_bin("weights/layer2_weights.bin");
         std::cout << "Loaded weights.bin successfully with dimensions: " << PyTorchWeights.rows << "x" << PyTorchWeights.cols << "\n\n";
 
     }
     catch(const std::exception& e ){
-        std::cerr<<"Warning"<<e.what();
+        std::cerr<<"Warning: "<< e.what() <<"\n\n";
 
     }
+   
+
+
+
+
+  
+
+    std::cout << "\nI. Naive Implementation: \nn";
+    auto start = std::chrono::high_resolution_clock::now();
+    Matrix BigC = Matrix::multiply_naive(BigA, BigB);
+    auto end = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double, std::milli> duration_naive = end - start;
+    std::cout << "Naive Execution Time: " << duration_naive.count() << " ms\n";
+
+    std::cout << "\n\nII. AVX2 Implementation: \n";
     auto start_avx = std::chrono::high_resolution_clock::now();
     Matrix BigC_avx = Matrix::multiply_avx2(BigA, BigB);
     auto end_avx = std::chrono::high_resolution_clock::now();
-    std::chrono::duration<double, std::milli> elapsed_avx = end_avx-start_avx;
+    std::chrono::duration<double, std::milli> duration_avx = end_avx-start_avx;
+    std::cout << " AVX2 Time: "<< duration_avx.count() << " ms\n\n";
 
-    std::cout << "512x512 AVX2 Time: "<<elapsed_avx.count() << " ms\n";
-    double speedup = duration.count() / elapsed_avx.count();
-    std::cout<<"\n Speedup: "<< speedup <<"x faster";
 
+     std::cout << "\n\nIII. Parallelization implementation: \n";
+    std::cout << "Hardware threads available: " << omp_get_max_threads() << "\nMatrix Dimensions: " << N << "x" << N << "\n";
+    auto start3 = std::chrono::high_resolution_clock::now();
+    C = Matrix::multiply_parallel(BigA, BigB);
+    auto end3 = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double, std::milli> duration_parallel = end3-start3;
+    std::cout << "Parallelizatin time: " << duration_parallel.count() << "ms\n";
+
+    std::cout << "Speedup naive/avx: " << duration_naive.count()/duration_avx.count() 
+              << "x\nSpeedup avx/parallel: " << duration_avx.count()/duration_parallel.count()
+              << "x\nSpeedup naive/parallel: " << duration_naive.count()/duration_parallel.count()<<"x\n";
+    
     return 0;
 }

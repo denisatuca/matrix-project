@@ -81,3 +81,32 @@ Matrix Matrix::multiply_avx2(const Matrix&A,const Matrix& B){
         }
         return C;
 }
+
+Matrix Matrix::multiply_parallel(const Matrix& A, const Matrix& B)
+{
+    if (A.cols!=B.rows) throw std::invalid_argument("Matrix dimensions do not match");
+
+    Matrix C(A.rows, B.cols);
+
+    #pragma omp parallel for schedule(dynamic)
+    for(int i=0; i<A.rows; i++)
+        for(int k=0; k<A.cols; k++)
+        {
+            __m256 a_vec = _mm256_set1_ps(A(i,k));
+            int j=0;
+            for (;j<=B.cols; j=j+8)
+            {
+                __m256 b_vec = _mm256_loadu_ps(&B(k,j));
+                __m256 c_vec = _mm256_loadu_ps(&C(i,j));
+
+                c_vec = _mm256_fmadd_ps(a_vec,b_vec,c_vec);
+                _mm256_storeu_ps(&C(i,j), c_vec);
+            }
+            for(;j<B.cols; j++)
+            {
+                C(i,j) += A(i,k)*B(k,j);
+            }
+
+        }
+    return C;
+}
