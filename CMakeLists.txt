@@ -10,6 +10,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -march=native -mfma ${OpenMP_CXX_FLA
 
 #O3 for code optimization
 # mfma = fused multiply add = does addition and multiplication in sigle clock cicle
+# march native enablesevery instruction set supported by local cpu
 include_directories(include)
 add_executable(matrix src/main.cpp src/Matrix.cpp)
 

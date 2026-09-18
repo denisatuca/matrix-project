@@ -77,7 +77,7 @@ Matrix Matrix::multiply_avx2(const Matrix&A,const Matrix& B){
             }
 
             for(;j<B.cols; j++)
-                C(i,j) +=A(i,k) * B(k,j); 
+                C(i,j) += A(i,k) * B(k,j); 
         }
         return C;
 }
@@ -109,4 +109,23 @@ Matrix Matrix::multiply_parallel(const Matrix& A, const Matrix& B)
 
         }
     return C;
+}
+
+void Matrix::apply_relu_avx2(){
+    int total_elements = rows * cols;
+    __m256 zero_vec = _mm256_setzero_ps();
+    int i=0;
+
+    for(; i<=total_elements - 8; i=i+8){
+        __m256 val = _mm256_loadu_ps(&data[i]);
+        val = _mm256_max_ps(val, zero_vec);
+        _mm256_storeu_ps(&data[i], val);
+    }
+
+    for(; i<total_elements; i++)
+    {
+        if (data[i]< 0.0f) data[i] = 0.0f;
+    }
+
+
 }

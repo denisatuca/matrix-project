@@ -27,6 +27,8 @@ public:
     static Matrix multiply_avx2(const Matrix &A, const Matrix &B);
     static Matrix load_from_bin(const std::string& filename);
     static Matrix multiply_parallel(const Matrix& A, const Matrix& B);
+    void apply_relu_avx2();
+
 };
 
 
